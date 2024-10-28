@@ -2,6 +2,7 @@ package com.example.myapplication.activity
 
 import android.os.Bundle
 import android.text.TextUtils
+import android.util.Log
 import android.view.inputmethod.EditorInfo
 import android.widget.TextView
 import android.widget.Toast
@@ -54,6 +55,7 @@ class MessageActivity : AppCompatActivity() {
             override fun onCancelled(error: DatabaseError) {
                 Toast.makeText(applicationContext, "Failed to load messages", Toast.LENGTH_SHORT)
                     .show()
+                Log.e("FirebaseError", "Error: ${error.message}")
             }
         })
 
