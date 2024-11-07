@@ -22,28 +22,42 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Generate api.properties file
+        run: |
+          echo "DB_URL=${{ secrets.DB_URL }}" >> Spring/src/main/resources/application-secret.properties
+          echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> Spring/src/main/resources/application-secret.properties
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> Spring/src/main/resources/application-secret.properties
+          echo "IMAGE_URL=${{ secrets.IMAGE_URL }}" >> Spring/src/main/resources/application-secret.properties
+
       - name: Build project
         run: |
           cd Spring
           ./gradlew clean build
+
       - name: Create SSH key file
         env:
           PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
         run: |
           echo "$PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
-      - name: Copy file to EC2
+
+      - name: Copy files to EC2
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ec2-user
         run: |
           scp -o StrictHostKeyChecking=no -i private_key.pem ./Spring/build/libs/fun_spring-0.0.1-SNAPSHOT.jar $EC2_USER@$EC2_HOST:/home/ec2-user/
+
       - name: Run JAR file on EC2 in background
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ec2-user
         run: |
-          ssh -o StrictHostKeyChecking=no -i private_key.pem $EC2_USER@$EC2_HOST "nohup java -jar /home/ec2-user/fun_spring-0.0.1-SNAPSHOT.jar > /dev/null 2>&1 &"
-      - name: Clean up SSH key
+          ssh -o StrictHostKeyChecking=no -i private_key.pem $EC2_USER@$EC2_HOST "
+           nohup java -jar /home/ec2-user/fun_spring-0.0.1-SNAPSHOT.jar > /home/ec2-user/application.log 2>&1 &
+          "
+
+      - name: Clean up SSH key and properties file
         if: always()
-        run: rm -f private_key.pem
+        run: |
+          rm -f private_key.pem
