@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'Android/**'
+      - 'React/**'
+      - 'Spring/**'
 
 jobs:
   deploy:
